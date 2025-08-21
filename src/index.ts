@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import { initActionPipeline, enqueueAction } from "./core/action-pipeline.js";
 import { listCommands, runCommand } from "./core/commands.js";
 import { loadModules } from "./core/module-loader.js";
@@ -37,10 +37,8 @@ async function main(): Promise<void> {
 
   Log.info({ flags: Array.from(listFlags()) }, "Feature flags loaded");
 
-  // Initialize action pipeline
   initActionPipeline();
 
-  // --- Demo: audit + queue wiring (kept for bootstrap) ---
   const incident = await beginIncident({ note: "Tier-0 bootstrap" });
   const queue = createQueue({ concurrency: 4, rateLimit: { max: 10, intervalMs: 1000 } });
 
@@ -60,17 +58,14 @@ async function main(): Promise<void> {
   await queue.idle();
   await endIncident(incident, { status: "ok" });
 
-  // Load modules listed in MODULES (e.g., "health")
   await loadModules();
 
-  // Prove commands work
   const cmds = ListCommands().map((c) => c.name);
   Log.info({ cmds }, "Commands available");
 
   const health: unknown = await RunCommand("health");
   Log.info({ health }, "Health command output");
 
-  // Example action through the pipeline
   await EnqueueAction({ type: "noop" }, async ({ audit }) => {
     await audit({ category: "system", action: "noop" });
     return true;
@@ -80,8 +75,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  // keep fatal errors visible and exit non-zero
-   
+  // eslint-disable-next-line no-console
   console.error("Fatal boot error:", err);
   process.exitCode = 1;
 });

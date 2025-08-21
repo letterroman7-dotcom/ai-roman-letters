@@ -26,20 +26,13 @@ export interface AuditRecord extends Required<AuditInput> {
 
 function getLogFn(level: Level) {
   switch (level) {
-    case "trace":
-      return logger.trace.bind(logger);
-    case "debug":
-      return logger.debug.bind(logger);
-    case "info":
-      return logger.info.bind(logger);
-    case "warn":
-      return logger.warn.bind(logger);
-    case "error":
-      return logger.error.bind(logger);
-    case "fatal":
-      return logger.fatal.bind(logger);
-    default:
-      return logger.info.bind(logger);
+    case "trace": return logger.trace.bind(logger);
+    case "debug": return logger.debug.bind(logger);
+    case "info":  return logger.info.bind(logger);
+    case "warn":  return logger.warn.bind(logger);
+    case "error": return logger.error.bind(logger);
+    case "fatal": return logger.fatal.bind(logger);
+    default:      return logger.info.bind(logger);
   }
 }
 
@@ -63,7 +56,7 @@ export async function auditEvent(input: AuditInput): Promise<string> {
 
   if (config.auditToFile) {
     const dir = await ensureDir(config.auditDir);
-    const day = rec.ts.slice(0, 10); // YYYY-MM-DD
+    const day = rec.ts.slice(0, 10);
     const file = path.join(dir, `${day}.jsonl`);
     const line = JSON.stringify(rec) + "\n";
     await fs.appendFile(file, line, "utf8");
@@ -75,13 +68,14 @@ export async function auditEvent(input: AuditInput): Promise<string> {
 /** Begin an incident (returns correlation id). */
 export async function beginIncident(details?: Record<string, unknown>): Promise<string> {
   const incidentId = createId("inc");
-  await auditEvent({
+  const payload: AuditInput = {
     level: "info",
     category: "incident",
     action: "start",
-    correlationId: incidentId,
-    details
-  });
+    correlationId: incidentId
+  };
+  if (details) payload.details = details;
+  await auditEvent(payload);
   return incidentId;
 }
 
@@ -90,11 +84,12 @@ export async function endIncident(
   incidentId: string,
   details?: Record<string, unknown>
 ): Promise<void> {
-  await auditEvent({
+  const payload: AuditInput = {
     level: "info",
     category: "incident",
     action: "end",
-    correlationId: incidentId,
-    details
-  });
+    correlationId: incidentId
+  };
+  if (details) payload.details = details;
+  await auditEvent(payload);
 }
