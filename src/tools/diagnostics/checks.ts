@@ -1,4 +1,4 @@
-import type { Inventory } from "./util.js";
+import type { Inventory, InvFile } from "./util.js";
 
 /** Group duplicates by exact hash and by normalized hash. */
 export function buildDuplicatesReport(inv: Inventory) {
@@ -20,28 +20,49 @@ export function buildDuplicatesReport(inv: Inventory) {
   return { groups, normalizedGroups };
 }
 
-/** Simple policy checks helpful for cleanup. */
+/** Detect relative ESM imports missing a .js-like extension. */
 export function buildPolicyChecks(inv: Inventory) {
-  const sameName: Record<string, string[]> = {};
-  for (const f of inv.files) {
-    const name = f.pathRel.split("/").pop()!;
-    sameName[name] = sameName[name] || [];
-    sameName[name].push(f.pathRel);
-  }
-  const duplicatedNames = Object.entries(sameName)
-    .filter(([, paths]) => paths.length > 1)
-    .map(([name, paths]) => ({ name, paths }));
+  const duplicatedNames = collectDuplicateNames(inv.files);
 
-  // ESM import extension check: find 'import "./something"' without .js in TS/JS files
-  const missingJsExtension: string[] = [];
+  const missingJsExtension: Array<{ file: string; line: number; spec: string }> = [];
+  const relImportRegex1 = /import\s+[^'"]*from\s+['"]([^'"]+)['"]/g;  // import x from '...'
+  const relImportRegex2 = /import\s+['"]([^'"]+)['"]/g;               // import '...'
+
   for (const f of inv.files) {
     if (!/\.tsx?$|\.jsx?$/.test(f.ext)) continue;
-    // content not loaded in metadata-only runs; skip detection then
-    // we’ll flag only if chunks exist and show issues per chunk
+    if (!f.contentChunks) continue; // present only in --content runs
+
+    for (const chunk of f.contentChunks) {
+      const scan = (re: RegExp) => {
+        re.lastIndex = 0;
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(chunk.text))) {
+          const spec = m[1];
+          if (!spec.startsWith("./") && !spec.startsWith("../")) continue; // only relative
+          if (spec.endsWith("/") || /(\.js|\.mjs|\.cjs|\.json|\.node)$/i.test(spec)) continue; // ok
+          // TS path without extension → likely runtime break in NodeNext after build
+          const line = chunk.startLine + (chunk.text.slice(0, m.index).match(/\n/g)?.length ?? 0);
+          missingJsExtension.push({ file: f.pathRel, line, spec });
+        }
+      };
+      scan(relImportRegex1);
+      scan(relImportRegex2);
+    }
   }
 
   return {
     duplicates: { sameName: duplicatedNames },
     imports: { missingJsExtension }
   };
+}
+
+function collectDuplicateNames(files: InvFile[]) {
+  const sameName: Record<string, string[]> = {};
+  for (const f of files) {
+    const name = f.pathRel.split("/").pop()!;
+    (sameName[name] ||= []).push(f.pathRel);
+  }
+  return Object.entries(sameName)
+    .filter(([, paths]) => paths.length > 1)
+    .map(([name, paths]) => ({ name, paths }));
 }

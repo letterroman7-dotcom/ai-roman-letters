@@ -1,12 +1,17 @@
-import ts from "typescript";
 import path from "node:path";
 
-export async function runTypecheck(root: string) {
-  const tsconfigPath = ts.findConfigFile(root, ts.sys.fileExists, "tsconfig.json");
+import ts from "typescript";
+
+export function runTypecheck(root: string) {
+  const tsconfigPath = ts.findConfigFile(root, (p) => ts.sys.fileExists(p), "tsconfig.json");
   if (!tsconfigPath) return { ok: false, errors: [{ message: "tsconfig.json not found" }] };
 
-  const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
-  const configParse = ts.parseJsonConfigFileContent(configFile.config, ts.sys, path.dirname(tsconfigPath));
+  const configFile = ts.readConfigFile(tsconfigPath, (p) => ts.sys.readFile(p));
+  const configParse = ts.parseJsonConfigFileContent(
+    configFile.config,
+    ts.sys,
+    path.dirname(tsconfigPath)
+  );
 
   const program = ts.createProgram({
     rootNames: configParse.fileNames,
@@ -25,7 +30,14 @@ export async function runTypecheck(root: string) {
       line = pos.line + 1;
       col = pos.character + 1;
     }
-    return { file, line, col, message: msg, code: d.code, category: ts.DiagnosticCategory[d.category] };
+    return {
+      file,
+      line,
+      col,
+      message: msg,
+      code: d.code,
+      category: ts.DiagnosticCategory[d.category]
+    };
   });
 
   return { ok: errors.length === 0, errors };

@@ -1,12 +1,12 @@
 import fs from "node:fs/promises";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import os from "node:os";
-import { inventoryRepo } from "./util.js";
+import path from "node:path";
+
 import { buildDuplicatesReport, buildPolicyChecks } from "./checks.js";
-import { buildDepsGraph } from "./deps.js";
+import { buildDepsGraph, findDeadFiles } from "./deps.js";
 import { runEslint } from "./eslint.js";
 import { runTypecheck } from "./typecheck.js";
+import { inventoryRepo } from "./util.js";
 
 type CLIOpts = {
   root: string;
@@ -66,7 +66,7 @@ async function main() {
   const outDir = path.join(opts.root, "data", "diagnostics", stamp);
   await ensureDir(outDir);
 
-  // 1) Inventory (files, sizes, hashes, optional content chunks)
+  // 1) Inventory
   const inv = await inventoryRepo({
     root: opts.root,
     excludes: opts.excludes,
@@ -75,72 +75,97 @@ async function main() {
   });
   await writeJSON(path.join(outDir, "inventory.json"), inv);
 
-  // 2) Duplicates + simple policy checks
+  // 2) Duplicates + policy (missing .js ext)
   const dup = buildDuplicatesReport(inv);
   await writeJSON(path.join(outDir, "duplicates.json"), dup);
 
   const policy = buildPolicyChecks(inv);
   await writeJSON(path.join(outDir, "policy.json"), policy);
 
-  // 3) Deps graph (skip in quick mode)
+  // 3) Deps graph + dead files (skip in quick mode)
   let deps: any = { nodes: [], edges: [] };
+  let dead: string[] = [];
   if (!opts.quick) {
     deps = await buildDepsGraph(opts.root, inv);
     await writeJSON(path.join(outDir, "deps.json"), deps);
+
+    const entry = path.join(opts.root, "src", "index.ts");
+    const roots = inv.files.some((f) => path.resolve(f.pathAbs) === path.resolve(entry))
+      ? [entry]
+      : [];
+    dead = findDeadFiles(deps, roots);
+    await writeJSON(path.join(outDir, "dead.json"), { roots, files: dead });
   }
 
-  // 4) ESLint report (skip in quick mode)
+  // 4) ESLint (skip quick)
   let lint: any = { summary: {}, results: [] };
   if (!opts.quick) {
     lint = await runEslint(inv.files.map((f) => f.pathAbs));
     await writeJSON(path.join(outDir, "eslint.json"), lint);
   }
 
-  // 5) TypeScript type-check (skip in quick mode)
+  // 5) TypeScript type-check (skip quick)
   let tsc: any = { ok: true, errors: [] };
   if (!opts.quick) {
-    tsc = await runTypecheck(opts.root);
+    tsc = runTypecheck(opts.root); // <- no await (sync function)
     await writeJSON(path.join(outDir, "typecheck.json"), tsc);
   }
 
-  // 6) Summary markdown for human skim
+  // -------- Summary markdown --------
+  const extList = Object.entries(inv.byExt)
+    .map(([k, v]) => `${k}(${v})`)
+    .join(", ");
+
+  const missingExtLines = (policy.imports?.missingJsExtension ?? [])
+    .slice(0, 10)
+    .map((i: any) => `  - ${i.file}:${i.line} -> '${i.spec}'`)
+    .join("\n");
+
+  const deadPreview = dead
+    .slice(0, 10)
+    .map((f) => `  - ${path.relative(opts.root, f).replace(/\\/g, "/")}`)
+    .join("\n");
+
   const md = [
     `# Diagnostics Summary (${stamp})`,
     ``,
-    `**Root:** \`${opts.root}\`  `,
-    `**Host:** \`${os.hostname()}\`  `,
-    `**Include content:** ${opts.includeContent} (chunkLines=${opts.chunkLines})`,
+    `Root: ${opts.root}`,
+    `Host: ${os.hostname()}`,
+    `Include content: ${opts.includeContent} (chunkLines=${opts.chunkLines})`,
     ``,
     `## Inventory`,
-    `- Files scanned: **${inv.files.length}**`,
-    `- Total size: **${(inv.totalBytes / 1024).toFixed(1)} KB**`,
-    `- File types: ${Object.entries(inv.byExt).map(([k, v]) => `\`${k}\`(${v})`).join(", ")}`,
+    `- Files scanned: ${inv.files.length}`,
+    `- Total size: ${(inv.totalBytes / 1024).toFixed(1)} KB`,
+    `- File types: ${extList}`,
     ``,
     `## Duplicates`,
-    `- Exact duplicates (by SHA-256): **${dup.groups.length} groups**`,
-    `- Normalized duplicates (whitespace/comments stripped): **${dup.normalizedGroups.length} groups**`,
+    `- Exact duplicates: ${dup.groups.length} groups`,
+    `- Normalized duplicates: ${dup.normalizedGroups.length} groups`,
     ``,
     `## Policy checks`,
-    `- Missing .js extension in relative imports (ESM NodeNext): **${policy.imports.missingJsExtension.length}**`,
-    `- Duplicate file names (different folders): **${policy.duplicates.sameName.length}**`,
+    `- Missing .js extension (relative ESM imports): ${policy.imports.missingJsExtension.length}`,
+    missingExtLines,
     ``,
-    `## Deps graph`,
-    `- Nodes: **${deps.nodes?.length ?? 0}**, Edges: **${deps.edges?.length ?? 0}**`,
+    `## Dependency graph`,
+    `- Nodes: ${deps.nodes?.length ?? 0}, Edges: ${deps.edges?.length ?? 0}`,
+    ``,
+    `## Dead files`,
+    `- Count: ${dead.length}`,
+    deadPreview,
     ``,
     `## ESLint`,
-    `- Files with problems: **${lint.summary?.errorCount ?? 0 + lint.summary?.warningCount ?? 0}**`,
-    `- Errors: **${lint.summary?.errorCount ?? 0}**, Warnings: **${lint.summary?.warningCount ?? 0}**`,
+    `- Errors: ${lint.summary?.errorCount ?? 0}, Warnings: ${lint.summary?.warningCount ?? 0}`,
     ``,
     `## TypeScript`,
-    `- Typecheck OK: **${tsc.ok}**`,
-    `- Errors: **${tsc.errors?.length ?? 0}**`,
+    `- Typecheck OK: ${tsc.ok}`,
+    `- Errors: ${tsc.errors?.length ?? 0}`,
     ``,
-    `> Detailed JSON files are in \`data/diagnostics/${stamp}/\`. Paste any of them to me for deep refactor/cleanup help.`,
+    `Detailed reports are in data/diagnostics/${stamp}/`,
     ``
   ].join("\n");
   await writeMD(path.join(outDir, "summary.md"), md);
 
-  // 7) Write index pointer & console success
+  // 7) Pointer file
   await writeJSON(path.join(opts.root, "data", "diagnostics", "latest.json"), {
     stamp,
     outDir
