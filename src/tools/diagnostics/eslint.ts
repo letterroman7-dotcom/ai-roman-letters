@@ -1,13 +1,17 @@
 import { ESLint } from "eslint";
 
-export async function runEslint(files: string[]) {
-  const eslint = new ESLint({
-    useEslintrc: true,
-    extensions: [".ts", ".tsx", ".js", ".jsx"],
-    errorOnUnmatchedPattern: false
-  });
+export async function runEslint(files) {
+  // v9+ compatible
+  const eslint = new ESLint({});
 
-  const results = await eslint.lintFiles(files);
+  // Only lint code under src/, skip root configs like eslint.config.js
+  const codeFiles = Array.isArray(files)
+    ? files.filter((f) => /\.[tj]sx?$/.test(f) && /[\\/](src)[\\/]/i.test(f))
+    : [];
+
+  const targets = codeFiles.length > 0 ? codeFiles : ["src/**/*.{ts,tsx,js,jsx}"];
+  const results = await eslint.lintFiles(targets);
+
   const summary = results.reduce(
     (acc, r) => {
       acc.errorCount += r.errorCount;
@@ -28,8 +32,8 @@ export async function runEslint(files: string[]) {
         severity: m.severity,
         message: m.message,
         line: m.line,
-        column: m.column
-      }))
-    }))
+        column: m.column,
+      })),
+    })),
   };
 }

@@ -1,0 +1,45 @@
+{
+  "name": "ai-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "diag": "tsx src/tools/diagnostics/run.ts",
+    "diag:full": "tsx src/tools/diagnostics/run.ts --content --chunks 400",
+    "diag:quick": "tsx src/tools/diagnostics/run.ts --quick",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "diag:all": "eslint . --ext .ts && tsc -p tsconfig.json --noEmit && tsx src/tools/diagnostics/run.ts --content --chunks 400",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-unused-imports": "^4.2.0",
+    "pino-pretty": "^13.1.1",
+    "prettier": "^3.6.2",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.40.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "pino": "^9.9.0",
+    "zod": "^4.0.17"
+  }
+}
