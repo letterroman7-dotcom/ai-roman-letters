@@ -25,19 +25,32 @@ function parseArgs(): CLIOpts {
     quick: args.includes("--quick"),
     excludes: ["node_modules", "dist", ".git", ".turbo"]
   };
+
   const chunkIdx = args.indexOf("--chunks");
-  if (chunkIdx >= 0 && args[chunkIdx + 1]) {
-    const n = Number(args[chunkIdx + 1]);
-    if (Number.isFinite(n) && n > 20 && n < 2000) opts.chunkLines = Math.floor(n);
+  if (chunkIdx >= 0) {
+    const val = args[chunkIdx + 1];
+    if (typeof val === "string") {
+      const n = Number(val);
+      if (Number.isFinite(n) && n > 20 && n < 2000) opts.chunkLines = Math.floor(n);
+    }
   }
+
   const exclIdx = args.indexOf("--exclude");
-  if (exclIdx >= 0 && args[exclIdx + 1]) {
-    opts.excludes = args[exclIdx + 1].split(",").map((s) => s.trim()).filter(Boolean);
+  if (exclIdx >= 0) {
+    const val = args[exclIdx + 1];
+    if (typeof val === "string") {
+      opts.excludes = val.split(",").map((s) => s.trim()).filter(Boolean);
+    }
   }
+
   const rootIdx = args.indexOf("--root");
-  if (rootIdx >= 0 && args[rootIdx + 1]) {
-    opts.root = path.resolve(args[rootIdx + 1]);
+  if (rootIdx >= 0) {
+    const val = args[rootIdx + 1];
+    if (typeof val === "string") {
+      opts.root = path.resolve(val);
+    }
   }
+
   return opts;
 }
 
@@ -66,7 +79,6 @@ async function main() {
   const outDir = path.join(opts.root, "data", "diagnostics", stamp);
   await ensureDir(outDir);
 
-  // 1) Inventory
   const inv = await inventoryRepo({
     root: opts.root,
     excludes: opts.excludes,
@@ -75,14 +87,12 @@ async function main() {
   });
   await writeJSON(path.join(outDir, "inventory.json"), inv);
 
-  // 2) Duplicates + policy (missing .js ext)
   const dup = buildDuplicatesReport(inv);
   await writeJSON(path.join(outDir, "duplicates.json"), dup);
 
   const policy = buildPolicyChecks(inv);
   await writeJSON(path.join(outDir, "policy.json"), policy);
 
-  // 3) Deps graph + dead files (skip in quick mode)
   let deps: any = { nodes: [], edges: [] };
   let dead: string[] = [];
   if (!opts.quick) {
@@ -97,21 +107,18 @@ async function main() {
     await writeJSON(path.join(outDir, "dead.json"), { roots, files: dead });
   }
 
-  // 4) ESLint (skip quick)
   let lint: any = { summary: {}, results: [] };
   if (!opts.quick) {
     lint = await runEslint(inv.files.map((f) => f.pathAbs));
     await writeJSON(path.join(outDir, "eslint.json"), lint);
   }
 
-  // 5) TypeScript type-check (skip quick)
   let tsc: any = { ok: true, errors: [] };
   if (!opts.quick) {
-    tsc = runTypecheck(opts.root); // <- no await (sync function)
+    tsc = runTypecheck(opts.root);
     await writeJSON(path.join(outDir, "typecheck.json"), tsc);
   }
 
-  // -------- Summary markdown --------
   const extList = Object.entries(inv.byExt)
     .map(([k, v]) => `${k}(${v})`)
     .join(", ");
@@ -165,11 +172,7 @@ async function main() {
   ].join("\n");
   await writeMD(path.join(outDir, "summary.md"), md);
 
-  // 7) Pointer file
-  await writeJSON(path.join(opts.root, "data", "diagnostics", "latest.json"), {
-    stamp,
-    outDir
-  });
+  await writeJSON(path.join(opts.root, "data", "diagnostics", "latest.json"), { stamp, outDir });
 
   console.log(`\n✅ Diagnostics complete → ${outDir}\n`);
 }

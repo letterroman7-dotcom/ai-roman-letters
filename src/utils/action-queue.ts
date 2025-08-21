@@ -1,13 +1,14 @@
-type Job<T> = {
-  run: () => Promise<T>;
-  name?: string;
-  resolve: (v: T) => void;
+type Job = {
+  run: () => Promise<unknown>;
+  // With exactOptionalPropertyTypes, allow 'undefined' explicitly if present:
+  name?: string | undefined;
+  resolve: (v: unknown) => void;
   reject: (e: unknown) => void;
 };
 
 export interface QueueOptions {
-  concurrency?: number; // parallel workers
-  rateLimit?: { max: number; intervalMs: number }; // X jobs per interval
+  concurrency?: number;
+  rateLimit?: { max: number; intervalMs: number };
 }
 
 export interface Queue {
@@ -21,18 +22,16 @@ export function createQueue(opts: QueueOptions = {}): Queue {
   const concurrency = Math.max(1, opts.concurrency ?? 4);
   const rate = opts.rateLimit ?? { max: 20, intervalMs: 1000 };
 
-  const q: Job<unknown>[] = [];
+  const q: Job[] = [];
   let running = 0;
 
-  // sliding window timestamps of "started" jobs
   const starts: number[] = [];
-
   let resolveIdle: (() => void) | null = null;
-  const idlePromise = () =>
-    new Promise<void>((res) => {
-      if (running === 0 && q.length === 0) return res();
-      resolveIdle = res;
-    });
+
+  function idle(): Promise<void> {
+    if (running === 0 && q.length === 0) return Promise.resolve();
+    return new Promise<void>((res) => (resolveIdle = res));
+  }
 
   function maybeResolveIdle() {
     if (running === 0 && q.length === 0 && resolveIdle) {
@@ -44,7 +43,7 @@ export function createQueue(opts: QueueOptions = {}): Queue {
 
   function haveToken(now: number): boolean {
     const cutoff = now - rate.intervalMs;
-    while (starts.length && starts[0] < cutoff) starts.shift();
+    while (starts.length > 0 && (starts[0] ?? 0) < cutoff) starts.shift();
     return starts.length < rate.max;
   }
 
@@ -54,7 +53,8 @@ export function createQueue(opts: QueueOptions = {}): Queue {
 
     const now = Date.now();
     if (!haveToken(now)) {
-      const wait = Math.max(0, (starts[0] + rate.intervalMs) - now);
+      const first = starts[0] ?? now;
+      const wait = Math.max(0, first + rate.intervalMs - now);
       setTimeout(tryStart, wait + 1);
       return;
     }
@@ -78,7 +78,14 @@ export function createQueue(opts: QueueOptions = {}): Queue {
 
   function add<T>(fn: () => Promise<T>, name?: string): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-      q.push({ run: fn, name, resolve, reject });
+      const base: Omit<Job, "name"> = {
+        run: async () => fn(),
+        resolve: (v) => resolve(v as T),
+        reject
+      };
+      // Only include 'name' if defined to satisfy exactOptionalPropertyTypes
+      const job: Job = name ? { ...base, name } : base as Job;
+      q.push(job);
       tryStart();
     });
   }
@@ -87,6 +94,6 @@ export function createQueue(opts: QueueOptions = {}): Queue {
     add,
     size: () => q.length,
     pending: () => running,
-    idle: idlePromise
+    idle
   };
 }
