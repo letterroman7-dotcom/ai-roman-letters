@@ -1,26 +1,31 @@
 {
   "name": "ai-bot",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npm run build && node dist/index.js",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "diag": "tsx src/tools/diagnostics/run.ts",
-    "diag:full": "tsx src/tools/diagnostics/run.ts --content --chunks 400",
-    "diag:quick": "tsx src/tools/diagnostics/run.ts --quick",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "diag:all": "eslint . --ext .ts && tsc -p tsconfig.json --noEmit && tsx src/tools/diagnostics/run.ts --content --chunks 400",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier . --write"
-  },
-  "keywords": [],
-  "author": "",
+  "private": true,
   "license": "ISC",
   "type": "module",
+  "description": "",
+  "main": "dist/bootstrap.js",
+  "scripts": {
+    "start": "node ./dist/bootstrap.js",
+    "build": "tsc",
+    "dev:watch": "tsc -w & node --watch dist/bootstrap.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "diag:quick": "node ./dist/diagnostics/quick.js",
+    "diag:full": "node ./dist/diagnostics/full.js",
+    "cmd": "npm run build && node ./dist/index.js",
+    "handoff:view": "type .\\\\.handoff\\\\context.json",
+    "handoff": "node .\\\\scripts\\\\context-handoff.cjs",
+    "cli": "node ./dist/cli.js",
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\\\scripts\\\\smoke.ps1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "pino": "^9.9.0",
+    "zod": "^4.0.17"
+  },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/node": "^24.3.0",
@@ -36,10 +41,5 @@
     "tsx": "^4.20.4",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.40.0"
-  },
-  "dependencies": {
-    "dotenv": "^17.2.1",
-    "pino": "^9.9.0",
-    "zod": "^4.0.17"
   }
 }
