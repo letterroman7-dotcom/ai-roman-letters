@@ -1,0 +1,45 @@
+{
+  "ok": false,
+  "errors": [
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/index.ts",
+      "line": 2,
+      "col": 51,
+      "message": "Cannot find module './core/action-pipeline.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/index.ts",
+      "line": 3,
+      "col": 42,
+      "message": "Cannot find module './core/commands.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/index.ts",
+      "line": 4,
+      "col": 29,
+      "message": "Cannot find module './core/module-loader.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/diagnostics/eslint.ts",
+      "line": 3,
+      "col": 33,
+      "message": "Parameter 'files' implicitly has an 'any' type.",
+      "code": 7006,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/utils/action-queue.ts",
+      "line": 81,
+      "col": 31,
+      "message": "Type '(value: T | PromiseLike<T>) => void' is not assignable to type '(v: unknown) => void'.\n  Types of parameters 'value' and 'v' are incompatible.\n    Type 'unknown' is not assignable to type 'T | PromiseLike<T>'.",
+      "code": 2322,
+      "category": "Error"
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "duplicates": {
+    "sameName": [
+      {
+        "name": "dead.json",
+        "paths": [
+          "data/diagnostics/20250820-195201/dead.json",
+          "data/diagnostics/20250820-195341/dead.json",
+          "data/diagnostics/20250820-195755/dead.json",
+          "data/diagnostics/20250820-195942/dead.json"
+        ]
+      },
+      {
+        "name": "deps.json",
+        "paths": [
+          "data/diagnostics/20250820-195201/deps.json",
+          "data/diagnostics/20250820-195341/deps.json",
+          "data/diagnostics/20250820-195755/deps.json",
+          "data/diagnostics/20250820-195942/deps.json"
+        ]
+      },
+      {
+        "name": "duplicates.json",
+        "paths": [
+          "data/diagnostics/20250820-195201/duplicates.json",
+          "data/diagnostics/20250820-195341/duplicates.json",
+          "data/diagnostics/20250820-195755/duplicates.json",
+          "data/diagnostics/20250820-195942/duplicates.json"
+        ]
+      },
+      {
+        "name": "inventory.json",
+        "paths": [
+          "data/diagnostics/20250820-195201/inventory.json",
+          "data/diagnostics/20250820-195341/inventory.json",
+          "data/diagnostics/20250820-195755/inventory.json",
+          "data/diagnostics/20250820-195942/inventory.json"
+        ]
+      },
+      {
+        "name": "policy.json",
+        "paths": [
+          "data/diagnostics/20250820-195201/policy.json",
+          "data/diagnostics/20250820-195341/policy.json",
+          "data/diagnostics/20250820-195755/policy.json",
+          "data/diagnostics/20250820-195942/policy.json"
+        ]
+      }
+    ]
+  },
+  "imports": {
+    "missingJsExtension": []
+  }
+}

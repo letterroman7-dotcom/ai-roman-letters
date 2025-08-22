@@ -1,0 +1,394 @@
+{
+  "summary": {
+    "errorCount": 28,
+    "warningCount": 14
+  },
+  "results": [
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\index.ts",
+      "errorCount": 1,
+      "warningCount": 5,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./utils/config.js` import should occur before import of `./utils/logger.js`",
+          "line": 2,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./utils/flags.js` import should occur before import of `./utils/logger.js`",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./utils/audit.js` import should occur before import of `./utils/logger.js`",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./utils/action-queue.js` import should occur before import of `./utils/logger.js`",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "ruleId": "@typescript-eslint/no-floating-promises",
+          "severity": 2,
+          "message": "Promises must be awaited, end with a call to .catch, end with a call to .then with a rejection handler or be explicitly marked as ignored with the `void` operator.",
+          "line": 28,
+          "column": 5
+        },
+        {
+          "ruleId": null,
+          "severity": 1,
+          "message": "Unused eslint-disable directive (no problems were reported from 'no-console').",
+          "line": 54,
+          "column": 3
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\checks.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\deps.ts",
+      "errorCount": 2,
+      "warningCount": 1,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "There should be at least one empty line between import groups",
+          "line": 1,
+          "column": 1
+        },
+        {
+          "ruleId": "@typescript-eslint/unbound-method",
+          "severity": 2,
+          "message": "Avoid referencing unbound methods which may cause unintentional scoping of `this`.\nIf your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.",
+          "line": 15,
+          "column": 48
+        },
+        {
+          "ruleId": "@typescript-eslint/unbound-method",
+          "severity": 2,
+          "message": "Avoid referencing unbound methods which may cause unintentional scoping of `this`.\nIf your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.",
+          "line": 18,
+          "column": 54
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\eslint.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\run.ts",
+      "errorCount": 14,
+      "warningCount": 3,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`node:path` import should occur after import of `node:os`",
+          "line": 2,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "There should be at least one empty line between import groups",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./util.js` import should occur after import of `./typecheck.js`",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 85,
+          "column": 13
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-argument",
+          "severity": 2,
+          "message": "Unsafe argument of type `any` assigned to a parameter of type `{ nodes: string[]; edges: { from: string; to: string; }[]; }`.",
+          "line": 95,
+          "column": 26
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 100,
+          "column": 13
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 107,
+          "column": 12
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 120,
+          "column": 14
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .file on an `any` value.",
+          "line": 120,
+          "column": 31
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .line on an `any` value.",
+          "line": 120,
+          "column": 41
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .spec on an `any` value.",
+          "line": 120,
+          "column": 55
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .nodes on an `any` value.",
+          "line": 149,
+          "column": 22
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .edges on an `any` value.",
+          "line": 149,
+          "column": 57
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .summary on an `any` value.",
+          "line": 156,
+          "column": 23
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .summary on an `any` value.",
+          "line": 156,
+          "column": 67
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .ok on an `any` value.",
+          "line": 159,
+          "column": 28
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .errors on an `any` value.",
+          "line": 160,
+          "column": 22
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\typecheck.ts",
+      "errorCount": 3,
+      "warningCount": 2,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "There should be at least one empty line between import groups",
+          "line": 1,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`node:path` import should occur before import of `typescript`",
+          "line": 2,
+          "column": 1
+        },
+        {
+          "ruleId": "@typescript-eslint/require-await",
+          "severity": 2,
+          "message": "Async function 'runTypecheck' has no 'await' expression.",
+          "line": 4,
+          "column": 8
+        },
+        {
+          "ruleId": "@typescript-eslint/unbound-method",
+          "severity": 2,
+          "message": "Avoid referencing unbound methods which may cause unintentional scoping of `this`.\nIf your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.",
+          "line": 5,
+          "column": 48
+        },
+        {
+          "ruleId": "@typescript-eslint/unbound-method",
+          "severity": 2,
+          "message": "Avoid referencing unbound methods which may cause unintentional scoping of `this`.\nIf your function does not access `this`, you can annotate it with `this: void`, or consider using an arrow function instead.",
+          "line": 8,
+          "column": 54
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\util.ts",
+      "errorCount": 0,
+      "warningCount": 1,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`node:crypto` import should occur before import of `node:fs/promises`",
+          "line": 3,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\action-queue.ts",
+      "errorCount": 1,
+      "warningCount": 0,
+      "messages": [
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 24,
+          "column": 16
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\audit.ts",
+      "errorCount": 5,
+      "warningCount": 2,
+      "messages": [
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "There should be at least one empty line between import groups",
+          "line": 2,
+          "column": 1
+        },
+        {
+          "ruleId": "import/order",
+          "severity": 1,
+          "message": "`./logger.js` import should occur after import of `./ids.js`",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-assignment",
+          "severity": 2,
+          "message": "Unsafe assignment of an `any` value.",
+          "line": 43,
+          "column": 9
+        },
+        {
+          "ruleId": "@typescript-eslint/no-explicit-any",
+          "severity": 2,
+          "message": "Unexpected any. Specify a different type.",
+          "line": 43,
+          "column": 29
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access [level] on an `any` value.",
+          "line": 43,
+          "column": 34
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-call",
+          "severity": 2,
+          "message": "Unsafe call of a(n) `any` typed value.",
+          "line": 45,
+          "column": 5
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unsafe-member-access",
+          "severity": 2,
+          "message": "Unsafe member access .call on an `any` value.",
+          "line": 45,
+          "column": 12
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\config.ts",
+      "errorCount": 2,
+      "warningCount": 0,
+      "messages": [
+        {
+          "ruleId": "@typescript-eslint/no-unnecessary-type-assertion",
+          "severity": 2,
+          "message": "This assertion is unnecessary since it does not change the type of the expression.",
+          "line": 47,
+          "column": 15
+        },
+        {
+          "ruleId": "@typescript-eslint/no-unnecessary-type-assertion",
+          "severity": 2,
+          "message": "This assertion is unnecessary since it does not change the type of the expression.",
+          "line": 49,
+          "column": 16
+        }
+      ]
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\flags.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\fsx.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\ids.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\logger.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    }
+  ]
+}

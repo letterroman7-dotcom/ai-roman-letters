@@ -1,0 +1,92 @@
+{
+  "summary": {
+    "errorCount": 0,
+    "warningCount": 0
+  },
+  "results": [
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\index.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\checks.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\deps.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\eslint.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\run.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\typecheck.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\tools\\diagnostics\\util.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\action-queue.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\audit.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\config.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\flags.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\fsx.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\ids.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    },
+    {
+      "filePath": "C:\\Users\\mrahe\\ai-bot\\src\\utils\\logger.ts",
+      "errorCount": 0,
+      "warningCount": 0,
+      "messages": []
+    }
+  ]
+}

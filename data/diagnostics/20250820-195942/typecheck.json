@@ -1,0 +1,45 @@
+{
+  "ok": false,
+  "errors": [
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/index.ts",
+      "line": 1,
+      "col": 20,
+      "message": "Cannot find module './utils/logger.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/index.ts",
+      "line": 2,
+      "col": 20,
+      "message": "Cannot find module './utils/config.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/index.ts",
+      "line": 3,
+      "col": 45,
+      "message": "Cannot find module './utils/flags.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/index.ts",
+      "line": 4,
+      "col": 56,
+      "message": "Cannot find module './utils/audit.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    },
+    {
+      "file": "C:/Users/mrahe/ai-bot/src/tools/index.ts",
+      "line": 5,
+      "col": 29,
+      "message": "Cannot find module './utils/action-queue.js' or its corresponding type declarations.",
+      "code": 2307,
+      "category": "Error"
+    }
+  ]
+}

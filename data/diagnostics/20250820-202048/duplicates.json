@@ -1,0 +1,70 @@
+{
+  "groups": [
+    {
+      "hash": "ff464da8a8a92abb660c1106842d8a00595c9766e91e606a71601b3cb159b76e",
+      "paths": [
+        "data/diagnostics/20250820-195201/dead.json",
+        "data/diagnostics/20250820-195341/dead.json",
+        "data/diagnostics/20250820-195755/dead.json",
+        "data/diagnostics/20250820-195942/dead.json"
+      ]
+    },
+    {
+      "hash": "ccca66d9ba1aec00f3e261a2d83f05731a5d606e84fd0916844f0a846be7147f",
+      "paths": [
+        "data/diagnostics/20250820-195201/deps.json",
+        "data/diagnostics/20250820-195341/deps.json",
+        "data/diagnostics/20250820-195755/deps.json",
+        "data/diagnostics/20250820-195942/deps.json"
+      ]
+    },
+    {
+      "hash": "cab2c0fd5291779604444b2749a691070916c4445ea53156e60e83a9f67400a8",
+      "paths": [
+        "data/diagnostics/20250820-195201/duplicates.json",
+        "data/diagnostics/20250820-195341/duplicates.json"
+      ]
+    },
+    {
+      "hash": "5a1db0da63c91b9b257baf2bb91dccfd1d0b1962e5f62340d7bfa77db4d95970",
+      "paths": [
+        "data/diagnostics/20250820-195201/policy.json",
+        "data/diagnostics/20250820-195341/policy.json"
+      ]
+    }
+  ],
+  "normalizedGroups": [
+    {
+      "hash": "756f6e272193d248021159a75dccfed418cffbb376fe9a83dcf12fa2456d4c4f",
+      "paths": [
+        "data/diagnostics/20250820-195201/dead.json",
+        "data/diagnostics/20250820-195341/dead.json",
+        "data/diagnostics/20250820-195755/dead.json",
+        "data/diagnostics/20250820-195942/dead.json"
+      ]
+    },
+    {
+      "hash": "a461bf77bc4e4d732f7afc121c70e7f70ed8bf225a082a4e01951d1eb6b5c278",
+      "paths": [
+        "data/diagnostics/20250820-195201/deps.json",
+        "data/diagnostics/20250820-195341/deps.json",
+        "data/diagnostics/20250820-195755/deps.json",
+        "data/diagnostics/20250820-195942/deps.json"
+      ]
+    },
+    {
+      "hash": "3eaae1bf876257878bcde4bc35708e625505cfb4a30c93ecc8614199ad6fd17c",
+      "paths": [
+        "data/diagnostics/20250820-195201/duplicates.json",
+        "data/diagnostics/20250820-195341/duplicates.json"
+      ]
+    },
+    {
+      "hash": "8f3c63485b94d7d24ebc333f33f3d770873f7dc0796ec87925a8c85511ee6e4d",
+      "paths": [
+        "data/diagnostics/20250820-195201/policy.json",
+        "data/diagnostics/20250820-195341/policy.json"
+      ]
+    }
+  ]
+}

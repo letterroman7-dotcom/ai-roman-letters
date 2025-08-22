@@ -1,15 +1,14 @@
 ﻿// src/index.ts
-// Build the bot and register skills.
-
 import { Bot } from "./bot/core.js";
-import { registerDemo } from "./bot/demo.js";
-import { registerAsk } from "./bot/skills/ask.js";
+import registerSkills from "./bot/skills/index.js";
 
-export function createBot(): Bot {
+/** Construct a Bot with all built-in demo skills wired. */
+export function createDemoBot(): Bot {
   const bot = new Bot();
-  registerDemo(bot);
-  registerAsk(bot);
+  registerSkills(bot);
   return bot;
 }
 
-export default createBot;
+// Re-exports for convenience
+export { Bot } from "./bot/core.js";
+export type { Message, Reply, Handler } from "./bot/core.js";
