@@ -1,5 +1,5 @@
 {
-  "when": "2025-08-22T00:38:31.543Z",
+  "when": "2025-08-22T00:39:54.459Z",
   "system": {
     "node": "v22.17.1",
     "npm": "11.4.2",
@@ -25,7 +25,7 @@
   },
   "packageJson": {
     "name": "ai-bot",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scripts": {
       "start": "node ./dist/bootstrap.js",
       "build": "tsc",
