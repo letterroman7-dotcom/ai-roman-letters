@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "ai-bot",
   "version": "1.1.0",
   "private": true,
@@ -19,7 +19,15 @@
     "handoff:view": "type .\\\\.handoff\\\\context.json",
     "handoff": "node .\\\\scripts\\\\context-handoff.cjs",
     "cli": "node ./dist/cli.js",
-    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\\\scripts\\\\smoke.ps1"
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\\\scripts\\\\smoke.ps1",
+    "handoff:refresh": "npm run handoff && npm run handoff:view",
+    "handoff:print": "node -e \"const fs=require('fs');const j=JSON.parse(fs.readFileSync('.handoff/context.json','utf8'));console.log({cwd:j.paths.cwd,APP_NAME:j.env.APP_NAME,NODE_ENV:j.env.NODE_ENV,package:(j.packageJson?(j.packageJson.name+'@'+j.packageJson.version):null)});\"",
+    "handoff:ci": "npm run build && npm run typecheck && npm run lint && npm run diag:quick && npm run handoff:refresh",
+    "say": "node ./dist/tools/say.js",
+    "demo": "node ./scripts/demo.mjs",
+    "demo:q": "node ./scripts/demo.mjs",
+    "test": "npm run build && node --test test/**/*.test.mjs",
+    "test:watch": "npm run build && node --test --watch test/**/*.test.mjs"
   },
   "dependencies": {
     "dotenv": "^17.2.1",
