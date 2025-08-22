@@ -1,5 +1,20 @@
+# Node
 node_modules/
 dist/
+
+# Editors
+.vscode/
+
+# Local handoff artifacts
+.handoff/
+
+# Logs & runtime artifacts
+data/logs/
+
+# Env files
 .env
-*.log
-data/diagnostics/
+.env.local
+.env.*.local
+
+# Temp/backup files
+package.json.bak

@@ -1,48 +1,23 @@
 // src/bot/demo.ts
-import pino from "pino";
-import { Bot } from "./core.js";
-import type { Message } from "./core.js";
+// Demo handlers: echo and reverse
+// Safe for strict TS + noUncheckedIndexedAccess and your bot.use signature.
 
-const devPretty =
-  process.env.NODE_ENV === "development"
-    ? { target: "pino-pretty", options: { colorize: true, translateTime: "UTC:yyyy-mm-dd HH:MM:ss.l" } }
-    : undefined;
+export const registerDemo = (bot: any): void => {
+  // echo: replies with whatever follows "echo "
+  bot.use(/^echo\s+(.+)/i, (msg: any) => {
+    const textRaw = typeof msg?.text === "string" ? msg.text : "";
+    const m = textRaw.match(/^echo\s+(.+)/i);
+    const text: string = m?.[1] ?? "";
+    return { text };
+  });
 
-const log = pino({ name: "ai-bot", level: "info", transport: devPretty });
+  // reverse: replies with reversed text after "reverse "
+  bot.use(/^reverse\s+(.+)/i, (msg: any) => {
+    const textRaw = typeof msg?.text === "string" ? msg.text : "";
+    const m = textRaw.match(/^reverse\s+(.+)/i);
+    const s: string = (m?.[1] ?? "").split("").reverse().join("");
+    return { text: s };
+  });
+};
 
-const bot = new Bot({
-  onLog: (obj, msg) => log.info(obj, msg),
-});
-
-// echo <text>  -> replies with <text>
-bot.use(/^echo\s+(.+)/i, (msg) => {
-  const m = msg.text.match(/^echo\s+(.+)/i);
-  return { text: m ? m[1] : "" };
-});
-
-// reverse <text> -> replies with reversed text
-bot.use(/^reverse\s+(.+)/i, (msg) => {
-  const m = msg.text.match(/^reverse\s+(.+)/i);
-  const s = (m ? m[1] : "").split("").reverse().join("");
-  return { text: s };
-});
-
-async function run() {
-  const tests: Message[] = [
-    { text: "echo hello world" },
-    { text: "reverse abcdef" },
-    { text: "unknown command" },
-  ];
-
-  for (const t of tests) {
-    const replies = await bot.handle(t);
-    for (const r of replies) {
-      log.info({ in: t.text, out: r.text }, "bot reply");
-    }
-  }
-}
-
-run().catch((err) => {
-  log.error({ err }, "bot demo failed");
-  process.exitCode = 1;
-});
+export default registerDemo;

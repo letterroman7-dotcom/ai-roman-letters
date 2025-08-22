@@ -1,56 +1,42 @@
-﻿import { promises as fs } from "node:fs";
-import path from "node:path";
+﻿// src/diagnostics/helpers/env.ts
+// Robust .env parser compatible with strict TS.
 
-async function readFileIfExists(p: string): Promise<string | null> {
-  try { return await fs.readFile(p, "utf8"); } catch { return null; }
-}
+import fs from "node:fs";
 
-function parseDotEnv(content: string): Record<string, string> {
+export function parseDotEnv(filePath: string): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const raw of content.split(/\r?\n/)) {
-    if (!raw || /^\s*#/.test(raw)) continue;
-    const m = raw.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+  if (!fs.existsSync(filePath)) return out;
+
+  const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+  // KEY=VALUE   (allows empty value)
+  const pat = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/;
+
+  for (const raw of lines) {
+    if (!raw) continue;
+    if (raw.trim().startsWith("#")) continue;
+
+    const m = raw.match(pat);
     if (!m) continue;
+
     const key = m[1];
-    let val = m[2].trim();
-    // strip surrounding quotes
-    val = val.replace(/^(['"])(.*)\1$/, "$2");
+    if (!key) continue;
+
+    let val = (m[2] ?? "").trim();
+
+    // Strip matching quotes
+    if (
+      val.length >= 2 &&
+      ((val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'")))
+    ) {
+      val = val.slice(1, -1);
+    }
+
+    // Unescape common sequences
+    val = val.replace(/\\n/g, "\n").replace(/\\r/g, "\r").replace(/\\t/g, "\t");
+
     out[key] = val;
   }
+
   return out;
-}
-
-export async function readDotEnv(cwd: string) {
-  const envPath = path.join(cwd, ".env");
-  const examplePath = path.join(cwd, ".env.example");
-  const envContent = await readFileIfExists(envPath);
-  const exampleContent = await readFileIfExists(examplePath);
-  const envVars = envContent ? parseDotEnv(envContent) : {};
-  const exampleVars = exampleContent ? parseDotEnv(exampleContent) : {};
-  return {
-    env: { path: envPath, exists: envContent != null, vars: envVars },
-    example: { path: examplePath, exists: exampleContent != null, vars: exampleVars },
-  };
-}
-
-export async function summarizeAppNames(cwd: string) {
-  const pkgPath = path.join(cwd, "package.json");
-  let pkgName = "";
-  try {
-    const raw = await fs.readFile(pkgPath, "utf8");
-    const pkg = JSON.parse(raw);
-    pkgName = pkg?.name ?? "";
-  } catch { /* ignore */ }
-
-  const { env } = await readDotEnv(cwd);
-  const APP_NAME = env.vars.APP_NAME ?? "";
-  const PROJECT_NAME = env.vars.PROJECT_NAME ?? "";
-
-  return {
-    APP_NAME: APP_NAME || PROJECT_NAME || pkgName || "",
-    from: {
-      env: APP_NAME || PROJECT_NAME || "",
-      packageJson: pkgName,
-    },
-  };
 }

@@ -1,23 +1,20 @@
 // src/bot/skills/ask.ts
-import type { Bot, Message, Reply } from "../core.js";
+// "ask" skill: normalizes the question safely under strict typing.
 
-/**
- * "ask" stub skill:
- *  - "ask say hi"      -> "hi"
- *  - "ask what is 2+2" -> "4"
- *  - otherwise         -> echo back as stub
- */
-export function registerAsk(bot: Bot) {
-  bot.use(/^ask\s+(.+)/i, (msg: Message): Reply | void => {
-    const m = msg.text.match(/^ask\s+(.+)/i);
-    if (!m) return;
-    const q = m[1].trim().toLowerCase();
+export const registerAsk = (bot: any): void => {
+  bot.use(/^ask\s+(.+)/i, async (msg: any) => {
+    const textRaw = typeof msg?.text === "string" ? msg.text : "";
+    const m = textRaw.match(/^ask\s+(.+)/i);
+    const q: string = (m?.[1] ?? "").trim().toLowerCase();
 
-    if (q === "say hi" || q === "hi") return { text: "hi" };
-    if (/^what\s*is\s*2\s*\+\s*2$/.test(q)) return { text: "4" };
+    if (!q) {
+      // No-op or optionally return a help reply
+      return { text: "Usage: ask <your question>" };
+    }
 
-    return { text: `stub heard: "${q}"` };
+    // TODO: plug in your real Q&A logic here
+    return { text: `You asked: ${q}` };
   });
-}
+};
 
 export default registerAsk;

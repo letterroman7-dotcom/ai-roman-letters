@@ -1,71 +1,32 @@
-﻿// src/diagnostics/quick.ts
+﻿import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { execSync } from "node:child_process";
-import { promises as fs } from "node:fs";
-import { readDotEnv, summarizeAppNames } from "./helpers/env.js";
-import { pathExists, safeReadJson } from "./helpers/fs.js";
 
-async function ensureDir(p: string) {
-  await fs.mkdir(p, { recursive: true });
+function readJSON(p: string): any | null {
+  try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return null; }
 }
 
-async function main() {
-  const cwd = process.cwd();
+const cwd = process.cwd();
+const pkg = readJSON(path.join(cwd, "package.json"));
+const panicPath = path.join(cwd, "data", "guardian", "panic.lock");
+const distIndex = path.join(cwd, "dist", "index.js");
 
-  const when = new Date().toISOString();
-  let npm = "";
-  try { npm = execSync("npm -v").toString().trim(); } catch { npm = ""; }
+const info = {
+  node: process.version,
+  npm: (process.env.npm_config_user_agent?.match(/npm\/([0-9.]+)/)?.[1]) ?? null,
+  os: `${os.platform()} ${os.release()}`,
+  cwd,
+  APP_NAME: process.env.APP_NAME ?? null,
+  NODE_ENV: process.env.NODE_ENV ?? null,
+  package: pkg ? `${pkg.name}@${pkg.version}` : null,
+  distIndexPresent: fs.existsSync(distIndex),
+  panic: fs.existsSync(panicPath) ? "ON" : "off"
+};
 
-  const envInfo = await readDotEnv(cwd);
-  const appNameSummary = await summarizeAppNames(cwd);
+const ok = info.distIndexPresent;
+const mark = ok ? "✅" : "❌";
 
-  const paths = {
-    cwd,
-    panicLock: path.join(cwd, "data", "guardian", "panic.lock"),
-    distIndex: path.join(cwd, "dist", "index.js"),
-  };
+console.log(`${mark} diag:quick`, info);
 
-  const existence = {
-    env: envInfo.env.exists,
-    envExample: envInfo.example.exists,
-    distIndex: await pathExists(paths.distIndex),
-    panicLockFile: await pathExists(paths.panicLock),
-  };
-
-  const packageJson = await safeReadJson(path.join(cwd, "package.json"));
-  const packageLockJson = await safeReadJson(path.join(cwd, "package-lock.json"));
-
-  const out = {
-    when,
-    system: {
-      node: process.version,
-      npm,
-      os: `${process.platform} ${process.arch}`,
-      release: os.release(),
-    },
-    appNameSummary,
-    paths,
-    existence,
-    packageJson,
-    packageLockJson,
-  };
-
-  // write to logs + also print to console
-  const logsDir = path.join(cwd, "data", "logs");
-  const file = path.join(
-    logsDir,
-    `${when.replace(/[:.]/g, "-")}-quick.json`
-  );
-  await ensureDir(logsDir);
-  await fs.writeFile(file, JSON.stringify(out, null, 2), "utf8");
-
-  // guaranteed visible line + JSON body
-  console.log(`DIAG[quick]: wrote ${path.relative(cwd, file)}`);
-  console.log(JSON.stringify(out, null, 2));
-}
-
-main().catch(err => {
-  console.error("[diagnostics:quick] error:", err);
-  process.exit(1);
-});
+// Non-zero exit if critical artifact missing (helps CI signal failures)
+if (!ok) process.exitCode = 1;
