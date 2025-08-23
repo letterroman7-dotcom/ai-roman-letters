@@ -1,7 +1,6 @@
 // src/config/antinuke.ts
 import fs from "node:fs";
 import path from "node:path";
-
 import { z } from "zod";
 
 import {
@@ -37,10 +36,7 @@ export function loadAntinukeConfig(filePath = DEFAULT_PATH): AntiNukeConfig {
   }
 }
 
-/**
- * Safe variant for dev/bootstrap paths: returns a disabled config on error.
- * Logs a clear warning so issues are visible without crashing the app.
- */
+/** Safe variant for bootstrap/dev: disabled fallback on error; logs why. */
 export function safeLoadAntinukeConfig(
   filePath = DEFAULT_PATH,
 ): AntiNukeConfig {

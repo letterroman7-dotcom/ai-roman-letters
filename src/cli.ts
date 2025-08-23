@@ -1,104 +1,165 @@
-﻿// src/cli.ts
-/**
- * CLI that speaks a JSON-lines protocol:
- * - Each input line (or argv call) → exactly ONE JSON array on stdout.
- * - Commands: echo, reverse, ask, sum
- * - Also supports numeric fallback: if line has numbers but no known cmd, returns their sum.
- * - Accepts common command prefixes (! / . # > @) and can find a command in the first few tokens.
- */
-import { stdin as input } from "node:process";
+﻿import process from "node:process";
 import { createInterface } from "node:readline";
 import { pathToFileURL } from "node:url";
 
-const _exe = process.execPath;
-void _exe; // satisfy no-unused-vars
-
-const KNOWN = new Set(["echo", "reverse", "ask", "sum"]);
-
-function extractNumbers(text: string): number[] {
-  const matches = text.match(/-?\d+(?:\.\d+)?/g);
-  return matches ? matches.map(Number) : [];
+/**
+ * Print exactly one JSON array line to stdout.
+ * Tests expect either [] or ["message", ...] as a single line.
+ */
+function emit(lines: string[]): void {
+  const safe = lines.filter((x) => typeof x === "string");
+  process.stdout.write(JSON.stringify(safe) + "\n");
 }
 
-function normalizeCmdToken(token: string): string {
-  // strip leading common bot prefixes
-  return token.replace(/^[!\/.#>@]+/, "").toLowerCase();
-}
-
-function parseCommandAndText(line: string): {
-  cmd: string | null;
-  text: string;
-} {
-  const parts = line.trim().split(/\s+/);
-  if (parts.length === 0) return { cmd: null, text: "" };
-
-  // Scan first few tokens to find a known command after normalization
-  const scanLimit = Math.min(parts.length, 3);
-  for (let i = 0; i < scanLimit; i++) {
-    const token = parts[i] ?? ""; // <-- safe default to satisfy TS
-    const maybe = normalizeCmdToken(token);
-    if (KNOWN.has(maybe)) {
-      const text = parts.slice(i + 1).join(" ");
-      return { cmd: maybe, text };
-    }
-  }
-  return { cmd: null, text: line.trim() };
-}
-
-function handle(line: string): string[] {
-  const trimmed = line.trim();
-  if (!trimmed) return [];
-
-  const { cmd, text } = parseCommandAndText(trimmed);
-
-  switch (cmd) {
-    case "echo":
-      return text ? [text] : [];
-    case "reverse":
-      return text ? [text.split("").reverse().join("")] : [];
-    case "ask":
-      return text ? [`You asked: ${text.toLowerCase()}`] : [];
-    case "sum": {
-      const nums = extractNumbers(text);
-      if (nums.length === 0) return [];
-      const total = nums.reduce((a, b) => a + b, 0);
-      return [String(total)];
-    }
-    default: {
-      // Fallback: sum any numbers present in the whole input line
-      const nums = extractNumbers(trimmed);
-      if (nums.length > 0) {
-        const total = nums.reduce((a, b) => a + b, 0);
-        return [String(total)];
+/**
+ * Try to read ONE line from STDIN without ever blocking the event loop.
+ * Always uses a short timeout; safe even if TTY.
+ */
+async function readLineWithTimeout(timeoutMs = 15): Promise<string> {
+  const rl = createInterface({ input: process.stdin });
+  return await new Promise<string>((resolve) => {
+    let settled = false;
+    const finish = (val: string) => {
+      if (settled) return;
+      settled = true;
+      try {
+        rl.close();
+      } catch {
+        /* noop */
       }
-      return [];
+      try {
+        process.stdin.pause();
+      } catch {
+        /* noop */
+      }
+      resolve(val);
+    };
+
+    const t = setTimeout(() => finish(""), timeoutMs);
+
+    rl.once("line", (line) => {
+      clearTimeout(t);
+      finish(typeof line === "string" ? line : "");
+    });
+    rl.once("close", () => {
+      clearTimeout(t);
+      finish("");
+    });
+  });
+}
+
+/**
+ * Tokenize argv so it works whether tests pass:
+ *   ['echo', 'hello', 'world']  or  ['echo hello world']  (single arg)
+ * It splits on whitespace within arguments and trims surrounding quotes.
+ */
+function tokenizeArgv(argv: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of argv) {
+    const parts = String(raw).split(/\s+/).filter(Boolean);
+    for (let p of parts) {
+      if (
+        (p.startsWith('"') && p.endsWith('"')) ||
+        (p.startsWith("'") && p.endsWith("'"))
+      ) {
+        p = p.slice(1, -1);
+      }
+      if (p.length > 0) out.push(p);
     }
   }
+  return out;
 }
 
-export async function runCli(): Promise<void> {
-  // argv mode: one shot, then exit
-  const argLine = process.argv.slice(2).join(" ").trim();
-  if (argLine) {
-    const out = handle(argLine);
-    process.stdout.write(JSON.stringify(out) + "\n");
-    return;
+/**
+ * Find the first supported command anywhere in the tokens.
+ * Returns [cmd, restTokens] or ["", []] if none.
+ */
+function pickCommand(tokens: string[]): [string, string[]] {
+  const SUP = new Set(["echo", "reverse", "ask", "sum"]);
+  for (let i = 0; i < tokens.length; i++) {
+    const maybe = tokens[i]?.toLowerCase();
+    if (maybe && SUP.has(maybe)) {
+      return [maybe, tokens.slice(i + 1)];
+    }
+  }
+  return ["", []];
+}
+
+function formatNumber(n: number): string {
+  const s = n.toFixed(10);
+  return s.replace(/\.?0+$/, "");
+}
+
+function sumFromArgs(args: string[]): string[] {
+  const haystack = args.join(" ");
+  const matches = haystack.match(/-?\d+(?:\.\d+)?/g);
+  if (!matches || matches.length === 0) return [];
+  const total = matches.reduce((acc, m) => acc + Number(m), 0);
+  return [formatNumber(total)];
+}
+
+/**
+ * Run the CLI once with provided argv (no node/filename).
+ * Strategy:
+ *  1) Tokenize argv (handles single-arg "echo hello world" form)
+ *  2) Detect the first known command anywhere in tokens
+ *  3) If there are no args following the command, non-blocking read ONE stdin line
+ *  4) Emit exactly one JSON array line
+ */
+export async function runCli(argv: string[]): Promise<void> {
+  // 1) Tokenize argv
+  const tokens = tokenizeArgv(argv);
+
+  // 2) Find command + args slice
+  const [cmd, initialRest] = pickCommand(tokens);
+  let rest = initialRest;
+
+  // 3) Optional fallback from stdin when no args provided
+  if (cmd && rest.length === 0) {
+    const line = await readLineWithTimeout();
+    if (line.trim().length > 0) {
+      rest = tokenizeArgv([line]);
+    }
   }
 
-  // interactive stdin mode: one JSON line per input line (no prompts)
-  const rl = createInterface({ input, crlfDelay: Infinity });
-  for await (const raw of rl) {
-    const out = handle(String(raw));
-    process.stdout.write(JSON.stringify(out) + "\n");
+  // 4) Dispatch
+  switch (cmd) {
+    case "echo": {
+      if (rest.length === 0) return emit([]);
+      return emit([rest.join(" ")]);
+    }
+    case "reverse": {
+      if (rest.length === 0) return emit([]);
+      const out = rest.join(" ").split("").reverse().join("");
+      return emit([out]);
+    }
+    case "ask": {
+      if (rest.length === 0) return emit([]);
+      const q = rest.join(" ").trim().toLowerCase();
+      if (!q) return emit([]);
+      return emit([`You asked: ${q}`]);
+    }
+    case "sum": {
+      return emit(sumFromArgs(rest));
+    }
+    default:
+      // Unknown or no command -> no reply
+      return emit([]);
   }
 }
 
-// Cross-platform “run if main” (Windows-friendly)
-try {
-  const mainHref = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
-  if (import.meta.url === mainHref) {
-    runCli().catch(() => process.exit(1));
+/**
+ * Allow running as a standalone entrypoint (e.g., `node dist/cli.js ...`).
+ */
+const isDirect = (() => {
+  try {
+    const called = process.argv[1] ?? "";
+    return import.meta.url === pathToFileURL(called).href;
+  } catch {
+    return false;
   }
-} catch {
-  // ignore
+})();
+
+if (isDirect) {
+  runCli(process.argv.slice(2)).catch(() => process.exit(1));
 }

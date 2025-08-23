@@ -1,28 +1,30 @@
-﻿// src/index.ts
-/**
- * Entry point that supports BOTH:
- *  1) CLI mode (argv provided OR interactive via stdin) → JSON-lines protocol
- *  2) HTTP server (bootstrapped with no args)
- */
+﻿import process from "node:process";
+
 import { runCli } from "./cli.js";
 
-const hasArgs = process.argv.length > 2;
+/**
+ * Decide whether to start the HTTP server or run the CLI.
+ * Explicit commands -> server; everything else (including no args) -> CLI.
+ */
+const SERVER_COMMANDS = new Set(["serve", "server", "start", "http"]);
 
-async function main(): Promise<void> {
-  if (hasArgs) {
-    // One-shot CLI execution for argv mode (no server/no noise)
-    await runCli();
-    return;
-  }
-
-  // No args → start HTTP server first (side-effect module)
-  await import("./bootstrap.js");
-
-  // Also accept interactive stdin for CLI tests; do NOT exit the process.
-  // runCli() will read lines and write a single JSON array per line.
-  void runCli().catch(() => {
-    /* swallow to avoid noisy stderr during tests */
-  });
+function getMode(argv: string[]): "server" | "cli" {
+  const first = (argv[0] ?? "").trim().toLowerCase();
+  if (SERVER_COMMANDS.has(first)) return "server";
+  return "cli";
 }
 
-void main();
+(async () => {
+  const argv = process.argv.slice(2);
+  const mode = getMode(argv);
+
+  if (mode === "server") {
+    // Defer heavy server bootstrap until explicitly requested.
+    await import("./bootstrap.js");
+    return;
+    // (server keeps running)
+  }
+
+  // Default to CLI mode — including when no args are provided.
+  await runCli(argv);
+})();

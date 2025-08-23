@@ -1,80 +1,109 @@
-﻿import "dotenv/config";
-import pino from "pino";
+﻿// src/bootstrap.ts
+import fs from "node:fs";
+import http from "node:http";
+import path from "node:path";
+import { URL } from "node:url";
 
+import { getAntiNukeStatus, reloadAntiNuke } from "./antinuke/service.js";
+import { logger } from "./logger.js";
 
+const PORT = Number(process.env.PORT ?? 3000);
+const panicLock = path.join(process.cwd(), ".panic.lock");
 
-import registerBot from "./modules/bot/index.js";
-import registerGuardian from "./modules/guardian/index.js";
-import registerHealth from "./modules/health/index.js";
-import registerHttp from "./modules/http/index.js";
-
-import type { App, CommandHandler } from "./types/app.js";
-import type { Logger } from "pino";
-
-async function main() {
-  const name = process.env.APP_NAME || "ai-bot";
-  const env = process.env.NODE_ENV || "development";
-  const logLevel = (process.env.LOG_LEVEL as pino.LevelWithSilent) || "info";
-
-  const log: Logger = pino({ name, level: logLevel });
-
-  log.info({ env, app: name, logLevel }, `${name} project: booting...`);
-
-  // Command bus (name -> handler(args[]))
-  const commands = new Map<string, CommandHandler>();
-
-  const app: App = {
-    name,
-    env,
-    log,
-
-    registerCommand(command: string, handler: CommandHandler) {
-      commands.set(command, handler);
-    },
-
-    listCommands() {
-      return Array.from(commands.keys()).sort();
-    },
-
-    async runCommand(cmd: string, args: unknown[]) {
-      const handler = commands.get(cmd);
-      if (!handler) throw new Error(`Unknown command: ${cmd}`);
-      return await handler(args);
-    },
-  };
-
-  // Wire modules
-  const loaded: string[] = [];
-
-  await registerHealth(app);
-  loaded.push("health");
-
-  await registerGuardian(app);
-  loaded.push("guardian");
-
-  await registerBot(app);
-  loaded.push("bot");
-
-  await registerHttp(app);
-  loaded.push("http");
-
-  app.log.info({ modules: loaded }, "Modules loaded");
-  app.log.info({ cmds: app.listCommands() }, "Commands available");
-
-  // Show health once during boot
+function panicStatus(): "on" | "off" {
   try {
-    const health = await app.runCommand("health", []);
-    app.log.info({ health }, "Health command output");
-  } catch (err) {
-    app.log.warn({ err }, "Health command missing");
+    return fs.existsSync(panicLock) ? "on" : "off";
+  } catch {
+    return "off";
   }
-
-  app.log.info({ queue: { size: 0, pending: 0 } }, "Bootstrap OK. Modules wired.");
 }
 
-main().catch((err) => {
-  const name = process.env.APP_NAME || "ai-bot";
-  const log = pino({ name });
-  log.fatal({ err }, "Fatal error during bootstrap");
-  process.exit(1);
+function setPanic(on: boolean) {
+  try {
+    if (on) fs.writeFileSync(panicLock, "panic", "utf8");
+    else if (fs.existsSync(panicLock)) fs.unlinkSync(panicLock);
+  } catch (e) {
+    logger.warn(
+      { err: e instanceof Error ? e.message : String(e) },
+      "panic toggle failed",
+    );
+  }
+}
+
+function sendJson(res: http.ServerResponse, code: number, body: unknown) {
+  const json = JSON.stringify(body);
+  res.writeHead(code, {
+    "content-type": "application/json; charset=utf-8",
+    "content-length": Buffer.byteLength(json),
+    "cache-control": "no-store",
+  });
+  res.end(json);
+}
+
+function sendText(res: http.ServerResponse, code: number, text = "") {
+  res.writeHead(code, { "content-type": "text/plain; charset=utf-8" });
+  res.end(text);
+}
+
+const server = http.createServer(async (req, res) => {
+  try {
+    if (!req.url) return sendText(res, 400, "Bad Request");
+    const url = new URL(req.url, `http://localhost:${PORT}`);
+    const pathname = url.pathname;
+
+    res.setHeader("access-control-allow-origin", "*");
+    res.setHeader("access-control-allow-methods", "GET,POST,OPTIONS");
+    res.setHeader("access-control-allow-headers", "content-type");
+    if (req.method === "OPTIONS") return sendText(res, 204);
+
+    if (req.method === "GET" && pathname === "/health") {
+      return sendJson(res, 200, { ok: true, panic: panicStatus() });
+    }
+
+    if (
+      (req.method === "GET" || req.method === "POST") &&
+      pathname === "/panic/status"
+    ) {
+      return sendJson(res, 200, { panic: panicStatus() });
+    }
+    if (
+      (req.method === "GET" || req.method === "POST") &&
+      pathname === "/panic/on"
+    ) {
+      setPanic(true);
+      return sendJson(res, 200, { panic: panicStatus() });
+    }
+    if (
+      (req.method === "GET" || req.method === "POST") &&
+      pathname === "/panic/off"
+    ) {
+      setPanic(false);
+      return sendJson(res, 200, { panic: panicStatus() });
+    }
+
+    if (req.method === "GET" && pathname === "/antinuke/status") {
+      return sendJson(res, 200, getAntiNukeStatus());
+    }
+    if (req.method === "POST" && pathname === "/antinuke/reload") {
+      const file = url.searchParams.get("file") ?? undefined;
+      const status = reloadAntiNuke(file);
+      return sendJson(res, 200, status);
+    }
+
+    if (req.method === "GET" && pathname === "/favicon.ico") {
+      return sendText(res, 204);
+    }
+
+    return sendText(res, 404, "Not Found");
+  } catch (e) {
+    logger.error(
+      { err: e instanceof Error ? (e.stack ?? e.message) : String(e) },
+      "uncaught error",
+    );
+    return sendJson(res, 500, { ok: false, error: "internal_error" });
+  }
+});
+
+server.listen(PORT, () => {
+  logger.info({ port: PORT }, "HTTP server listening");
 });
