@@ -1,6 +1,7 @@
-// src/bot/skills/index.ts
-import type { Bot } from "../core.js";
+﻿// src/bot/skills/index.ts
 import { registerDemo } from "../demo.js";
+
+import type { Bot } from "../core.js";
 
 /** Register all built-in demo skills. */
 export default function registerSkills(bot: Bot): void {

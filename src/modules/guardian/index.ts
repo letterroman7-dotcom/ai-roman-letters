@@ -1,7 +1,8 @@
 ﻿// src/modules/guardian/index.ts
-import type { App } from "../../types/app.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+
+import type { App } from "../../types/app.js";
 
 const panicDir = path.join(process.cwd(), "data", "guardian");
 const panicLockFile = path.join(panicDir, "panic.lock");

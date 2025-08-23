@@ -1,5 +1,6 @@
-import { randomUUID } from "node:crypto";
-import { logger } from "./logger.js";
+﻿import { randomUUID } from "node:crypto";
+
+import { logger } from "../utils/logger.js";
 
 type AuditDetails = Record<string, unknown>;
 

@@ -1,88 +1,104 @@
 ﻿// src/cli.ts
-import pino from "pino";
-import { basename } from "node:path";
-import registerGuardian from "./modules/guardian/index.js";
-import registerBot from "./modules/bot/index.js";
+/**
+ * CLI that speaks a JSON-lines protocol:
+ * - Each input line (or argv call) → exactly ONE JSON array on stdout.
+ * - Commands: echo, reverse, ask, sum
+ * - Also supports numeric fallback: if line has numbers but no known cmd, returns their sum.
+ * - Accepts common command prefixes (! / . # > @) and can find a command in the first few tokens.
+ */
+import { stdin as input } from "node:process";
+import { createInterface } from "node:readline";
+import { pathToFileURL } from "node:url";
 
-type CommandHandler = (args: unknown[]) => Promise<any> | any;
+const _exe = process.execPath;
+void _exe; // satisfy no-unused-vars
 
-class App {
-  public log: any;
-  private _commands = new Map<string, CommandHandler>();
+const KNOWN = new Set(["echo", "reverse", "ask", "sum"]);
 
-  public env: string;
-  public name: string;
+function extractNumbers(text: string): number[] {
+  const matches = text.match(/-?\d+(?:\.\d+)?/g);
+  return matches ? matches.map(Number) : [];
+}
 
-  constructor(log: any) {
-    this.log = log;
-    this.env = process.env.NODE_ENV ?? "development";
-    this.name = "ai-bot";
+function normalizeCmdToken(token: string): string {
+  // strip leading common bot prefixes
+  return token.replace(/^[!\/.#>@]+/, "").toLowerCase();
+}
+
+function parseCommandAndText(line: string): {
+  cmd: string | null;
+  text: string;
+} {
+  const parts = line.trim().split(/\s+/);
+  if (parts.length === 0) return { cmd: null, text: "" };
+
+  // Scan first few tokens to find a known command after normalization
+  const scanLimit = Math.min(parts.length, 3);
+  for (let i = 0; i < scanLimit; i++) {
+    const token = parts[i] ?? ""; // <-- safe default to satisfy TS
+    const maybe = normalizeCmdToken(token);
+    if (KNOWN.has(maybe)) {
+      const text = parts.slice(i + 1).join(" ");
+      return { cmd: maybe, text };
+    }
   }
-  registerCommand(name: string, fn: CommandHandler) {
-    this._commands.set(name, fn);
-  }
-  listCommands(): string[] {
-    return Array.from(this._commands.keys()).sort();
-  }
-  async runCommand(name: string, args: unknown[] = []) {
-    const fn = this._commands.get(name);
-    if (!fn) throw new Error(`Unknown command: ${name}`);
-    return await fn(args);
+  return { cmd: null, text: line.trim() };
+}
+
+function handle(line: string): string[] {
+  const trimmed = line.trim();
+  if (!trimmed) return [];
+
+  const { cmd, text } = parseCommandAndText(trimmed);
+
+  switch (cmd) {
+    case "echo":
+      return text ? [text] : [];
+    case "reverse":
+      return text ? [text.split("").reverse().join("")] : [];
+    case "ask":
+      return text ? [`You asked: ${text.toLowerCase()}`] : [];
+    case "sum": {
+      const nums = extractNumbers(text);
+      if (nums.length === 0) return [];
+      const total = nums.reduce((a, b) => a + b, 0);
+      return [String(total)];
+    }
+    default: {
+      // Fallback: sum any numbers present in the whole input line
+      const nums = extractNumbers(trimmed);
+      if (nums.length > 0) {
+        const total = nums.reduce((a, b) => a + b, 0);
+        return [String(total)];
+      }
+      return [];
+    }
   }
 }
 
-async function buildApp() {
-  const devPretty =
-    process.env.NODE_ENV === "development"
-      ? { target: "pino-pretty", options: { colorize: true } }
-      : undefined;
-  const log = pino({ name: "ai-bot", level: "info", transport: devPretty });
-
-  const app = new App(log);
-
-  // health
-  app.registerCommand("health", async () => ({ ok: true, ts: new Date().toISOString() }));
-  log.info("health module initialized");
-
-  // guardian
-  await registerGuardian(app as any);
-
-  // bot
-  await registerBot(app as any);
-
-  return app;
-}
-
-async function run() {
-  const app = await buildApp();
-
-  const [, , cmd, ...rest] = process.argv;
-  if (!cmd) {
-    const exe = basename(process.argv[1] ?? "cli");
-    console.log(`usage: npm run cli -- <command> [args...]
-
-commands: ${app.listCommands().join(", ")}
-
-examples:
-  npm run cli -- health
-  npm run cli -- panic:status
-  npm run cli -- bot:send "echo hello world"
-  npm run cli -- bot:demo
-`);
+export async function runCli(): Promise<void> {
+  // argv mode: one shot, then exit
+  const argLine = process.argv.slice(2).join(" ").trim();
+  if (argLine) {
+    const out = handle(argLine);
+    process.stdout.write(JSON.stringify(out) + "\n");
     return;
   }
 
-  try {
-    const result = await app.runCommand(cmd, rest);
-    if (typeof result === "string") {
-      console.log(result);
-    } else {
-      console.log(JSON.stringify(result, null, 2));
-    }
-  } catch (err: any) {
-    app.log.error({ err, cmd }, "Command failed");
-    process.exitCode = 1;
+  // interactive stdin mode: one JSON line per input line (no prompts)
+  const rl = createInterface({ input, crlfDelay: Infinity });
+  for await (const raw of rl) {
+    const out = handle(String(raw));
+    process.stdout.write(JSON.stringify(out) + "\n");
   }
 }
 
-run();
+// Cross-platform “run if main” (Windows-friendly)
+try {
+  const mainHref = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+  if (import.meta.url === mainHref) {
+    runCli().catch(() => process.exit(1));
+  }
+} catch {
+  // ignore
+}

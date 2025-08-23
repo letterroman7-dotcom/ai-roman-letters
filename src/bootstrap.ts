@@ -1,13 +1,15 @@
-import "dotenv/config";
+﻿import "dotenv/config";
 import pino from "pino";
-import type { Logger } from "pino";
 
-import type { App, CommandHandler } from "./types/app.js";
 
+
+import registerBot from "./modules/bot/index.js";
 import registerGuardian from "./modules/guardian/index.js";
 import registerHealth from "./modules/health/index.js";
-import registerBot from "./modules/bot/index.js";
 import registerHttp from "./modules/http/index.js";
+
+import type { App, CommandHandler } from "./types/app.js";
+import type { Logger } from "pino";
 
 async function main() {
   const name = process.env.APP_NAME || "ai-bot";

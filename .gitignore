@@ -1,20 +1,22 @@
-# Node
+# dependencies
 node_modules/
+
+# build output
 dist/
 
-# Editors
-.vscode/
-
-# Local handoff artifacts
+# env & handoff artifacts
+.env
+.env.*
+!.env.example
 .handoff/
 
-# Logs & runtime artifacts
+# runtime data
 data/logs/
+data/guardian/panic.lock
 
-# Env files
-.env
-.env.local
-.env.*.local
-
-# Temp/backup files
-package.json.bak
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json

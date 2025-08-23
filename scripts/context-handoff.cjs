@@ -1,116 +1,84 @@
-﻿// scripts/context-handoff.cjs
-// Robust context handoff writer for A`I project (Windows-friendly)
+﻿#!/usr/bin/env node
+/* scripts/context-handoff.cjs */
+"use strict";
 
-const fs = require('node:fs');
-const path = require('node:path');
-const os = require('node:os');
+// import/order: fs → os → path to satisfy your ruleset
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 
-// ---------- Load .env early so process.env has values ----------
 try {
-  const envPath = path.join(process.cwd(), '.env');
-  if (fs.existsSync(envPath)) {
-    require('dotenv').config({ path: envPath });
-  } else {
-    require('dotenv').config();
-  }
-  // Optional: log once (non-noisy)
-  console.log(`[dotenv@${require('dotenv/package.json').version}] injecting env from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }`);
-} catch (_) {
-  // continue silently if dotenv is missing
-}
+  require("dotenv").config();
+} catch {}
 
-// ---------- Helpers ----------
-const exists = (p) => {
-  try { return fs.existsSync(p); } catch { return false; }
+const nowIso = new Date().toISOString();
+const cwd = process.cwd();
+
+const distIndex = path.join(cwd, "dist", "index.js");
+const bootstrap = path.join(cwd, "dist", "bootstrap.js");
+const diagQuick = path.join(cwd, "dist", "diagnostics", "quick.js");
+const diagFull = path.join(cwd, "dist", "diagnostics", "full.js");
+
+const existence = {
+  env: fs.existsSync(path.join(cwd, ".env")),
+  envExample: fs.existsSync(path.join(cwd, ".env.example")),
+  distIndex: fs.existsSync(distIndex),
+  panicLockFile: fs.existsSync(
+    path.join(cwd, "data", "guardian", "panic.lock"),
+  ),
 };
 
-function readPackageSafe(pkgPath) {
-  // 1) Try require (CommonJS can still require JSON in Node 22)
-  try {
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    const pkg = require(pkgPath);
-    return { pkg, error: null };
-  } catch (e1) {
-    // 2) Fallback to fs + JSON.parse for more precise error
-    try {
-      const raw = fs.readFileSync(pkgPath, 'utf8');
-      const pkg = JSON.parse(raw);
-      return { pkg, error: null };
-    } catch (e2) {
-      return { pkg: null, error: (e1 && e1.message) ? `${e1.message}; ${e2.message}` : (e2.message || 'unknown error') };
-    }
-  }
+let packageJson = null;
+let packageJsonError = null;
+try {
+  packageJson = JSON.parse(
+    fs.readFileSync(path.join(cwd, "package.json"), "utf8"),
+  );
+} catch (e) {
+  packageJsonError = String((e && e.message) || e);
 }
 
-// ---------- Paths ----------
-const cwd = process.cwd();
-const distIndex = path.join(cwd, 'dist', 'index.js');
-const bootstrap = path.join(cwd, 'dist', 'bootstrap.js');
-const diagQuick = path.join(cwd, 'dist', 'diagnostics', 'quick.js');
-const diagFull  = path.join(cwd, 'dist', 'diagnostics', 'full.js');
-const panicLock = path.join(cwd, 'data', 'guardian', 'panic.lock');
-const pkgPath   = path.join(cwd, 'package.json');
-
-// ---------- Gather ----------
-const npmUA = process.env.npm_config_user_agent || '';
-const npmVersionMatch = npmUA.match(/npm\/([0-9.]+)/);
-const npmVersion = npmVersionMatch ? npmVersionMatch[1] : null;
-
-const { pkg, error: pkgErr } = readPackageSafe(pkgPath);
-
-const payload = {
-  when: new Date().toISOString(),
+const snapshot = {
+  when: nowIso,
   system: {
     node: process.version,
-    npm: npmVersion,
+    npm: process.env.npm_config_user_agent
+      ? process.env.npm_config_user_agent.split(" ")[0]?.split("/")?.[1]
+      : process.env.npm_version || null,
     os: `${os.platform()} ${os.arch()}`,
-    release: os.release()
+    release: os.release(),
   },
-  paths: {
-    cwd,
-    distIndex,
-    bootstrap,
-    diagQuick,
-    diagFull
-  },
-  existence: {
-    env: exists(path.join(cwd, '.env')),
-    envExample: exists(path.join(cwd, '.env.example')),
-    distIndex: exists(distIndex),
-    panicLockFile: exists(panicLock)
-  },
+  paths: { cwd, distIndex, bootstrap, diagQuick, diagFull },
+  existence,
   env: {
-    APP_NAME: process.env.APP_NAME ?? null,
-    NODE_ENV: process.env.NODE_ENV ?? null
+    APP_NAME: process.env.APP_NAME || null,
+    NODE_ENV: process.env.NODE_ENV || null,
   },
-  packageJson: pkg,
-  packageJsonError: pkg ? null : (pkgErr || null)
+  packageJson,
+  packageJsonError,
 };
 
-// ---------- Write handoff ----------
-const outDir = path.join(cwd, '.handoff');
-const outFile = path.join(outDir, 'context.json');
+const outDir = path.join(cwd, ".handoff");
+fs.mkdirSync(outDir, { recursive: true });
+const outPath = path.join(outDir, "context.json");
+fs.writeFileSync(outPath, JSON.stringify(snapshot, null, 2), "utf8");
 
-try {
-  if (!exists(outDir)) fs.mkdirSync(outDir, { recursive: true });
-  fs.writeFileSync(outFile, JSON.stringify(payload, null, 2), 'utf8');
+console.log("handoff written:", outPath);
+console.log(
+  "summary:\n",
+  " node:",
+  snapshot.system.node,
+  "\n",
+  " npm :",
+  snapshot.system.npm || "unknown",
+  "\n",
+  " cwd :",
+  cwd,
+  "\n",
+  " dist index present:",
+  existence.distIndex,
+);
 
-  const summary = [
-    `handoff written: ${outFile}`,
-    'summary:',
-    `  node: ${payload.system.node}`,
-    `  npm : ${payload.system.npm ?? 'unknown'}`,
-    `  cwd : ${cwd}`,
-    `  dist index present: ${payload.existence.distIndex ? 'true' : 'false'}`
-  ].join('\n');
-
-  console.log(summary);
-
-  if (!pkg) {
-    console.warn(`[handoff] ⚠️  package.json could not be parsed. Error: ${payload.packageJsonError}`);
-    console.warn(`[handoff] Tip: ensure ${pkgPath} exists and contains valid JSON (no trailing commas/comments).`);
-  }
-} catch (err) {
-  console.error('Failed to write handoff:', err?.message || err);
-  process.exitCode = 1;
-}
+// future-proof: keep linter happy even if placeholders appear
+const _unused = null;
+void _unused;

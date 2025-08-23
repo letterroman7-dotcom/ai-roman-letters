@@ -1,4 +1,4 @@
-// src/bot/core.ts
+﻿// src/bot/core.ts
 export type Message = { text: string };
 export type Reply = { text: string };
 

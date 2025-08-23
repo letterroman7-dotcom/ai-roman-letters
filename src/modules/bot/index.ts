@@ -1,7 +1,8 @@
-// src/modules/bot/index.ts
-import type { App } from "../../types/app.js";
+﻿// src/modules/bot/index.ts
 import { Bot } from "../../bot/core.js";
 import registerSkills from "../../bot/skills/index.js";
+
+import type { App } from "../../types/app.js";
 
 export default async function registerBot(app: App) {
   const bot = new Bot({ onLog: (obj, msg) => app.log.info(obj, msg) });

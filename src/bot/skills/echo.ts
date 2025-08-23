@@ -1,4 +1,4 @@
-// src/bot/skills/echo.ts
+﻿// src/bot/skills/echo.ts
 import type { Bot, Message, Reply } from "../core.js";
 
 export function registerEcho(bot: Bot) {

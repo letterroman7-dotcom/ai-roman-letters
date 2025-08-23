@@ -1,7 +1,8 @@
-// src/bot/demo.ts
-import type { Bot, Message, Reply } from "./core.js";
+﻿// src/bot/demo.ts
 import { registerAsk } from "./skills/ask.js";
 import { registerSum } from "./skills/sum.js";
+
+import type { Bot, Message, Reply } from "./core.js";
 
 /**
  * Wires all demo skills onto the provided bot:

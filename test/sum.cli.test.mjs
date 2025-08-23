@@ -1,7 +1,7 @@
 // test/sum.cli.test.mjs
-import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { test } from "node:test";
 
 function extractLastJSONArray(text) {
   const start = text.lastIndexOf("[");

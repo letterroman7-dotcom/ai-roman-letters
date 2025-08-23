@@ -1,15 +1,14 @@
 # ai-bot
 
-Minimal modular bot scaffold with:
+Minimal TypeScript bot with CLI + HTTP modules and a small skill set (echo, reverse, ask, sum) with tests.
 
-- **bootstrap** (pino logging, env)
-- **guardian** (panic lock + audit)
-- **health** (simple status)
-- **bot** module (demo commands)
+## Prereqs
 
-## Quick start
+- Node.js 22+
+- npm 10+
+
+## Install
 
 ```bash
-npm run build
-npm start
+npm ci
 ```

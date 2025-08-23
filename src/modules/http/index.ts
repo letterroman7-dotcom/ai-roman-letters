@@ -1,5 +1,6 @@
-// src/modules/http/index.ts  (existing file — replace entirely)
+﻿// src/modules/http/index.ts  (existing file â€” replace entirely)
 import http from "node:http";
+
 import type { App } from "../../types/app.js";
 
 type Json = Record<string, unknown>;

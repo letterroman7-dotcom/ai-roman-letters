@@ -1,4 +1,4 @@
-// src/bot/skills/reverse.ts
+﻿// src/bot/skills/reverse.ts
 import type { Bot, Message, Reply } from "../core.js";
 
 export function registerReverse(bot: Bot) {

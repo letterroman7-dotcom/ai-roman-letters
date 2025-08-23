@@ -1,4 +1,4 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 
 // ASCII-only banner to avoid mojibake on Windows terminals.
 const appName = process.env.APP_NAME || 'ai-bot';

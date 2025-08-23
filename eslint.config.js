@@ -1,38 +1,147 @@
 // @ts-check
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import importPlugin from "eslint-plugin-import";
-import unused from "eslint-plugin-unused-imports";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const tsRoot = path.dirname(fileURLToPath(import.meta.url));
+import js from "@eslint/js";
+import importPlugin from "eslint-plugin-import";
+import unused from "eslint-plugin-unused-imports";
+import tseslint from "typescript-eslint";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Pull the first entry from each flat preset array
+const jsRec = Array.isArray(js.configs.recommended)
+  ? js.configs.recommended[0]
+  : /** @type {any} */ ({});
+
+const tsRec = Array.isArray(tseslint.configs.recommended)
+  ? tseslint.configs.recommended[0]
+  : /** @type {any} */ ({});
 
 export default [
-  { ignores: ["node_modules/**", "dist/**", "data/**", "eslint.config.js"] },
-  js.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  // --------- global ignores ---------
   {
-    files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: { project: ["./tsconfig.json"], tsconfigRootDir: tsRoot, sourceType: "module" }
-    },
-    plugins: { import: importPlugin, "unused-imports": unused },
-    rules: {
-      "import/order": ["warn", { "newlines-between": "always", alphabetize: { order: "asc", caseInsensitive: true } }],
-      "unused-imports/no-unused-imports": "warn",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }]
-    }
+    ignores: ["node_modules/**", "dist/**", "data/**", ".handoff/**"],
   },
-  { files: ["src/tools/diagnostics/**/*.ts"], rules: {
-      "@typescript-eslint/no-unsafe-assignment":"off",
-      "@typescript-eslint/no-unsafe-member-access":"off",
-      "@typescript-eslint/no-unsafe-return":"off",
-      "@typescript-eslint/no-unsafe-call":"off",
-      "@typescript-eslint/no-unsafe-argument":"off",
-      "@typescript-eslint/no-explicit-any":"off",
-      "@typescript-eslint/restrict-template-expressions":"off",
-      "no-console":"off"
-  } }
+
+  // --------- JS (.js/.mjs/.cjs) ---------
+  {
+    files: ["**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      // seed with ESLint's recommended base language options
+      ...(jsRec.languageOptions ?? {}),
+      ecmaVersion: "latest",
+      sourceType: "module",
+    },
+    linterOptions: jsRec.linterOptions ?? {},
+    plugins: {
+      import: importPlugin,
+      "unused-imports": unused,
+    },
+    rules: {
+      ...(jsRec.rules ?? {}),
+      "no-console": "off",
+      "no-constant-condition": ["error", { checkLoops: false }],
+      "import/order": [
+        "warn",
+        {
+          "newlines-between": "always",
+          alphabetize: { order: "asc", caseInsensitive: true },
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            ["parent", "sibling", "index"],
+            "object",
+            "type",
+          ],
+        },
+      ],
+      "unused-imports/no-unused-imports": "warn",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+      // make sure TS-only rules are off in JS context
+      "@typescript-eslint/await-thenable": "off",
+    },
+  },
+
+  // --------- TS (.ts/.tsx), NON type-aware ---------
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ...(tsRec.languageOptions ?? {}),
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module",
+        // NOTE: no "project" -> stays NON type-aware (no parserServices)
+      },
+    },
+    linterOptions: tsRec.linterOptions ?? {},
+    plugins: {
+      ...(tsRec.plugins ?? {}),
+      import: importPlugin,
+      "unused-imports": unused,
+    },
+    rules: {
+      ...(tsRec.rules ?? {}),
+      // Pragmatic TS defaults during bootstrap
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/ban-ts-comment": [
+        "warn",
+        { "ts-expect-error": "allow-with-description" },
+      ],
+      // requires type info -> keep off
+      "@typescript-eslint/await-thenable": "off",
+
+      // Helpful general rules in TS files too
+      "import/order": [
+        "warn",
+        {
+          "newlines-between": "always",
+          alphabetize: { order: "asc", caseInsensitive: true },
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            ["parent", "sibling", "index"],
+            "object",
+            "type",
+          ],
+        },
+      ],
+      "unused-imports/no-unused-imports": "warn",
+      "unused-imports/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+
+  // --------- CJS override (scripts/*.cjs) ---------
+  {
+    files: ["**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+    },
+    rules: {
+      // avoid ESM-specific plugin noise on CJS files
+      "import/no-unresolved": "off",
+    },
+  },
 ];

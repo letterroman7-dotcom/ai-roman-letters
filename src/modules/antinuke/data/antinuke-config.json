@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "windowMs": 10000,
+  "thresholds": {
+    "bans": 3,
+    "kicks": 4,
+    "channelCreates": 4,
+    "channelDeletes": 3,
+    "roleCreates": 4,
+    "roleDeletes": 3,
+    "webhookCreates": 2,
+    "webhookDeletes": 2,
+    "emojiCreates": 5,
+    "emojiDeletes": 3
+  },
+  "actionOnTrip": "quarantine",
+  "timeoutSeconds": 600
+}

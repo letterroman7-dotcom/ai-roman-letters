@@ -1,10 +1,10 @@
 // test/bot.cli.test.mjs
 // Integration tests that drive the compiled CLI (dist/cli.js).
-import test from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import path from "node:path";
+import test from "node:test";
+import { promisify } from "node:util";
 
 const execFileP = promisify(execFile);
 const nodeBin = process.execPath;

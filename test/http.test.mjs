@@ -1,8 +1,8 @@
 // test/http.test.mjs
 // Boots the compiled server and exercises /health and /panic/* endpoints.
-import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn, execFile } from "node:child_process";
+import test from "node:test";
 import { setTimeout as delay } from "node:timers/promises";
 
 const NODE = process.execPath;

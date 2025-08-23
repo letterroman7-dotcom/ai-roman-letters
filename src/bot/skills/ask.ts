@@ -1,4 +1,4 @@
-// src/bot/skills/ask.ts
+﻿// src/bot/skills/ask.ts
 // "ask" skill: normalizes the question safely under strict typing.
 
 export const registerAsk = (bot: any): void => {

@@ -1,4 +1,4 @@
-// src/bot/skills/sum.ts
+﻿// src/bot/skills/sum.ts
 import type { Bot, Message, Reply } from "../core.js";
 
 export function registerSum(bot: Bot): void {

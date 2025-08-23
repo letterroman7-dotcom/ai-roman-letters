@@ -1,9 +1,9 @@
-// test/sum.test.mjs
-import { test } from "node:test";
+﻿// test/sum.test.mjs
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,7 +30,7 @@ function sendCli(text) {
         try {
           const arr = parseLastJsonArray(stdout);
           resolve(arr);
-        } catch (e) {
+        } catch {} {
           reject(new Error(`Unexpected CLI output:\n${stdout}\n${stderr}`));
         }
       },
