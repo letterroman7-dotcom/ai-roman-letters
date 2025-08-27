@@ -1,0 +1,51 @@
+{
+  "name": "ai-bot",
+  "version": "1.1.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.1",
+    "pino": "^9.9.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^24.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^9.34.0",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-n": "^17.21.3",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-unused-imports": "^4.2.0",
+    "rimraf": "^5.0.10",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0"
+  },
+  "scripts": {
+    "handoff:refresh": "node ./scripts/handoff-refresh.cjs",
+    "deploy:cmd": "node dist/scripts/register-commands.js",
+    "start": "node dist/src/index.js --help",
+    "serve:admin": "node ./dist/src/http/server.js",
+    "postbuild": "node ./scripts/assert-dist-paths.cjs && node ./scripts/postbuild-compat.cjs",
+    "verify:all": "npm run build && npm run typecheck && npm run lint && npm run diag:quick",
+    "handoff:ci": "npm run build && npm run typecheck && npm run lint && npm run diag:quick && npm run handoff:refresh",
+    "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item -Recurse -Force dist }\"",
+    "test:watch": "node --test --watch \"test/**/*.test.mjs\"",
+    "build": "tsc",
+    "diag:antinuke": "node dist/src/diagnostics-antinuke-smoke.js",
+    "start:bot": "node dist/src/bot.js",
+    "lint": "eslint . --ext .ts,.tsx,.js,.cjs,.mjs",
+    "lint:ci": "eslint . --ext .ts,.tsx,.js,.cjs,.mjs --max-warnings=0 --cache",
+    "pretest": "npm run build",
+    "status:gen": "node ./scripts/generate-project-status.cjs",
+    "test": "npm run build && node --test dist/test/**/*.js",
+    "typecheck": "tsc --noEmit",
+    "diag:quick": "node ./dist/src/diagnostics/quick.js",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "lint:src": "eslint \\src/**/*.ts\"",
+    "rebuild": "npm run clean && npm run build"
+  }
+}

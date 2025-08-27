@@ -1,0 +1,12 @@
+﻿{
+  "allow": [
+    "discord.com",
+    "discord.gg",
+    "youtube.com",
+    "youtu.be",
+    "github.com"
+  ],
+  "block": ["bit.ly", "is.gd", "tinyurl.com"],
+  "nsfw": ["redtube.com", "xvideos.com", "pornhub.com"],
+  "malicious": ["grabify.link", "iplogger.org", "blasze.com"]
+}
