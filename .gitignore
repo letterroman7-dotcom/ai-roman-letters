@@ -39,3 +39,11 @@ Thumbs.db
 
 # Diagnostics snapshots
 diagnostics/
+dist/
+.reports/
+ai-bot-src.zip
+package.json.bak
+ai-bot@1.1.1
+node
+npm
+data/restore/checkpoints/*.env
